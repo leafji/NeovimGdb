@@ -1,5 +1,5 @@
 function! window#CreateGdbWin()
-	botright new | res 12 | setl winfixheight
+	vert botright new | res 82 | setl winfixwidth
 endfunction
 
 function! window#GetGdbWin()

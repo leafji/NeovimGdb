@@ -5,7 +5,7 @@ endif
 if !has('nvim') | finish | endif
 
 sign define GdbBreakpoint text=●
-sign define GdbCurrentLine text=⇒
+sign define GdbCurrentLine text=▶
 
 let s:breakpoints = {}
 let s:max_breakpoint_sign_id = 5000
@@ -25,7 +25,7 @@ endfunction
 let s:GdbPaused = vimexpect#State([
 			\ ['\v[\o32]{2}(\f+):(\d+):\d+', 'jump'],
 			\ ['\v^(\f+):(\d+):\d+', 'jump'],
-			\ ['\v^\> \S+ (\f+):(\d+)', 'jump'],
+			\ ['\v^\> \S+ (\S+):(\d+)', 'jump'],
 			\ ['Continuing.', 'continue'],
 			\ ['Starting program', 'continue'],
 			\ ['\v^Breakpoint (\d+) at 0[xX]\x+: file ([^,]+), line (\d+)', 'mybreak'],
@@ -56,7 +56,6 @@ function s:GdbPaused.jump(file, line, ...)
 	endif
 
 	if empty(file) | return -1 | endif
-
 	let window = winnr()
 	exe self._jump_window 'wincmd w'
 	let self._current_buf = bufnr('%')
@@ -174,9 +173,6 @@ function! s:Gdb.update_current_line_sign(add)
 endfunction
 
 function! s:Spawn(server_host, client_cmd)
-	if exists('g:gdb')
-		throw 'Gdb already running'
-	endif
 
     call debugger_util#DebuggerMapping(1)
 
@@ -270,7 +266,7 @@ function! s:RefreshBreakpointSigns()
 		exe 'sign unplace '.i
 		let i += 1
 	endwhile
-	let id = 5000
+	let id = 5001
 	for linenr in keys(get(s:breakpoints, bufname('%'), {}))
 		exe 'sign place '.id.' name=GdbBreakpoint line='.linenr.' buffer='.buf
 		let id += 1
@@ -359,11 +355,22 @@ if has('mac')
     let g:local_gdb_cmd = "sudo " .g:local_gdb_cmd
 endif
 
-function! GoDlvDebug()
-    if empty("<bang>")
-        call s:Spawn(0, "dlv debug ")
+function! GoDlvDebug(args, mode)
+    " if dlv will map dlv command
+    let g:vim_debugger_mapping = {
+            \ ';r' : "run",
+            \ ';c' : "c",
+            \ ';n' : "n",
+            \ ';s' : "s",
+            \ ';f' : "stepout",
+            \ ';u' : "up",
+            \ ';d' : "down",
+            \ ';t' : "bt",
+            \ }
+    if !a:mode 
+        call s:Spawn(0, "dlv debug --check-go-version=false " .expand('%'))
     else
-        call s:Spawn(0, "dlv debug " .expand('%'))
+        call s:Spawn(0, a:args)
     endif
 endfunction
 
@@ -388,6 +395,8 @@ let g:vim_debugger_mapping = {
             \ ';n' : "n",
             \ ';s' : "s",
             \ ';f' : "finish",
+            \ ';u' : "up",
+            \ ';d' : "down",
             \ }
 
 nnoremap <silent> ;b :call <SID>ToggleBreakpoint()<cr>

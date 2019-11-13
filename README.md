@@ -21,3 +21,13 @@ let g:nvimgdb_host_cmd = {
             \ }
 ```
 
+## Enhance about dlv debug
+* two mode of dlv debug 
+    1. **GoDebugBinary**: it will do binary dlv using g:nvimdlv_binary_cmd.
+
+        let g:nvimdlv_binary_cmd = 'dlv exec ***binary '
+
+    2. **GoDebugFile** : it will debug this go file.
+* enhance the usage about dlv debug, include up/down frame, it will jump the related file. 
+
+
